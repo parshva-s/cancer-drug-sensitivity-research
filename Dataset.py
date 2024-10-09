@@ -41,21 +41,11 @@ class Dataset:
         """set features from a file
 
         Args:
-            feature_file_name (str, optional): the name of the file to read features from. Defaults to None.
+            feature_file_name (str): the name of the file to read features from.
+            data_directory (str): the directory which feature file is in
         """
-        if feature_file_name is None:
-            print("No file name provided")
-            return
-        
-        # check that path to file exists
-        if not os.path.exists(data_directory + feature_file_name):
-            print("File does not exist")
-            return
-        
-        # check file is a csv file
-        if not feature_file_name.endswith(".csv"):
-            print("File is not a csv file")
-            return
+        if not self.check_valid_file(feature_file_name, data_directory):
+            return 
         
         data = pd.read_csv(data_directory + feature_file_name)
         
@@ -67,8 +57,30 @@ class Dataset:
 
         # Convert the data to integer type (from float if NaN was present)
         self.gene_expression_data = pivoted_data.astype(int)
-            
-    def gene_data_to_csv(self, data_directory : str, output_file_name = None) -> None:
+    def check_valid_file(file_name : str, data_directory : str) -> bool:
+        """checks if a file is valid
+
+        Args:
+            data_directory (str): the directory of the file
+            file_name (str): the name of the file
+
+        Returns:
+            bool: True if file is valid, False otherwise
+        """
+        if file_name is None:
+            print("No file name provided")
+            return False
+        
+        if not os.path.exists(data_directory + file_name):
+            print("File does not exist")
+            return False
+        
+        if not file_name.endswith(".csv"):
+            print("File is not a csv file")
+            return False
+        
+        return True
+    
         """creates a csv file from gene expression data
 
         Args:
