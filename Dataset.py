@@ -20,3 +20,11 @@ class Dataset:
         for name in self.feature_names:
             print(name)
 
+    def get_feature_size(self) -> dict:
+        """gets the size of the feature space
+
+        Returns:
+            dict: the x and y dimensions of feature space
+        """
+        return self.feature_size
+    
