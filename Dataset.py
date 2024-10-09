@@ -68,7 +68,23 @@ class Dataset:
         # Convert the data to integer type (from float if NaN was present)
         self.gene_expression_data = pivoted_data.astype(int)
             
+    def gene_data_to_csv(self, data_directory : str, output_file_name = None) -> None:
+        """creates a csv file from gene expression data
+
+        Args:
+            data_directory (str): the directory of where csv will be stored
+            output_file_name (str, optional): name of the file to be stored to. Defaults to None.
+        """
+        if output_file_name is not None:
+            if not output_file_name.endswith(".csv"):
+                output_file_name += ".csv"
+            self.gene_expression_data.to_csv(data_directory + output_file_name)
+            print("Gene Expression data saved in: " + data_directory + output_file_name)
+        else:
+            self.gene_expression_data.to_csv(data_directory + "gene_expression_out.csv") 
+        
 if __name__ == "__main__":
     data_directory = "data/"
     dataset = Dataset("GDSC")
     dataset.set_features_GDSC("gene_expression.csv", data_directory)
+    dataset.gene_data_to_csv(data_directory)
