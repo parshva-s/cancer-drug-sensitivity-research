@@ -68,3 +68,7 @@ class Dataset:
         # Convert the data to integer type (from float if NaN was present)
         self.gene_expression_data = pivoted_data.astype(int)
             
+if __name__ == "__main__":
+    data_directory = "data/"
+    dataset = Dataset("GDSC")
+    dataset.set_features_GDSC("gene_expression.csv", data_directory)
