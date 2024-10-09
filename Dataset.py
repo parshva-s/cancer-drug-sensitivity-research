@@ -14,3 +14,9 @@ class Dataset:
         """
         return self.feature_names
 
+    def display_feature_names(self):
+        """print name of features
+        """
+        for name in self.feature_names:
+            print(name)
+
