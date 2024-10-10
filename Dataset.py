@@ -60,9 +60,9 @@ class Dataset:
         data = pd.read_csv(data_directory + feature_file_name)
 
         grouped_data = data.groupby(
-            ['Cell Line Name', 'Genes in Segment'], as_index=False).agg({'IS Mutated': 'max'})
+            ['COSMIC ID', 'Genes in Segment'], as_index=False).agg({'IS Mutated': 'max'})
         pivoted_data = grouped_data.pivot(
-            index='Cell Line Name',
+            index='COSMIC ID',
             columns='Genes in Segment',
             values='IS Mutated')
 
