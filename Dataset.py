@@ -81,6 +81,7 @@ class Dataset:
         
         return True
     
+    def gene_data_to_csv(self, data_directory : str, output_file_name : str = None) -> None:
         """creates a csv file from gene expression data
 
         Args:
