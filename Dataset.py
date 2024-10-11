@@ -215,8 +215,16 @@ def create_csv(modes : list, dataset : Dataset, csv_names : list, csv_directory 
         else:
             dataset.data_to_csv(modes[i], csv_directory)
 
-if __name__ == "__main__":
+def main():
+    dataset_name = "GDSC2"
     data_directory = "data/"
-    dataset = Dataset("GDSC")
-    dataset.set_features_GDSC("gene_expression.csv", data_directory)
-    # dataset.gene_data_to_csv(data_directory)
+    gene_file_name = "gene_expression.csv"
+    drug_file_name = "drug_cell_line.csv"
+    create_final_dataset = True
+    
+    # create dataset to be used
+    dataset = Dataset(dataset_name, gene_file_name, drug_file_name, data_directory, create_final_dataset)
+    create_csv(["final"], dataset, ["final_dataset.csv"], data_directory) # create csv for final dataset
+
+if __name__ == "__main__":
+    main()
