@@ -95,13 +95,26 @@ class Dataset:
         """set targets from a file
 
         Args:
-            feature_file_name (str): the name of the file to read features from.
-            data_directory (str): the directory which feature file is in
+            feature_file_name (str): the name of the file to read targets from.
+            data_directory (str): the directory which target file is in
         """
         if not self.check_valid_file(target_file, data_directory):
             return
 
-    def check_valid_file(file_name: str, data_directory: str) -> bool:
+        data = pd.read_csv(data_directory + target_file)
+
+        feature_names = [
+            "COSMIC_ID",
+            "DRUG_ID",
+            "LN_IC50",
+            "AUC",
+            "RMSE",
+            "Z_SCORE"]
+        
+        data = data[feature_names]
+        self.drug_cell_line_data = data
+
+    def check_valid_file(self, file_name: str, data_directory: str) -> bool:
         """checks if a file is valid
 
         Args:
