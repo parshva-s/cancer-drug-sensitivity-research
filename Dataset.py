@@ -6,23 +6,38 @@ import os
 class Dataset:
     def __init__(
             self,
+            dataset_name,
             gene_file: str = None,
             IC50_file: str = None,
-            data_directory: str = None):
+            data_directory: str = None,
+            create_data: bool = True):
+        self.dataset_name = dataset_name
         self.features = None
         self.targets = None
         self.feature_names = None
 
+        # dataframes used
         self.gene_expression_data = None
         self.drug_cell_line_data = None
+        self.dataset = None
 
-        self.feature_size = {"x": None, "y": None}
-
+        # create dataframes if file names are defined
         if gene_file is not None and data_directory is not None:
-            self.set_features(gene_file, data_directory)
+            self.set_features_GDSC(gene_file, data_directory)
 
         if IC50_file is not None and data_directory is not None:
-            self.set_targets(IC50_file, data_directory)
+            self.set_targets_GDSC(IC50_file, data_directory)
+        
+        if create_data:
+            self.create_data()
+    
+    def get_dataset_info(self):
+        """Gets the info about the dataset
+        """
+        if self.dataset_name == "GDSC":
+            print("This is the GDSC dataset.")
+        else:
+            print("No dataset was defined.")
 
     def get_feature_names(self) -> list:
         """get names of features
