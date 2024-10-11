@@ -125,16 +125,25 @@ class Dataset:
 
         return True
 
-    def gene_data_to_csv(
+    def data_to_csv(
             self,
+            mode: str,
             data_directory: str,
             output_file_name: str = None) -> None:
         """creates a csv file from gene expression data
 
         Args:
+            mode (str): different modes to save different data files
             data_directory (str): the directory of where csv will be stored
             output_file_name (str, optional): name of the file to be stored to. Defaults to None.
         """
+        
+        acceptable_modes = ["gene", "compound", "final"]
+        
+        if mode not in acceptable_modes:
+            print(f"Invalid mode. Must enter modes from: {acceptable_modes}")
+            return
+        
         if output_file_name is not None:
             if not output_file_name.endswith(".csv"):
                 output_file_name += ".csv"
