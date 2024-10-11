@@ -150,6 +150,23 @@ class Dataset:
         else:
             output_file_name = f"{mode}_out.csv"
         
+        match mode:     
+            case "gene":
+                if self.gene_expression_data.empty:
+                    print("Gene expression data not set.")
+                    return
+                self.gene_expression_data.to_csv(data_directory + output_file_name)
+            case "compound":
+                if self.drug_cell_line_data.empty:
+                    print("Drug cell line data not set.")
+                    return
+                self.drug_cell_line_data.to_csv(data_directory + output_file_name)
+            case "final":
+                if self.dataset.empty:
+                    print("Final data not set.")
+                    return
+                self.dataset.to_csv(data_directory + output_file_name)
+        print(f"{mode} data saved in: {data_directory}{output_file_name}")
 
 
 if __name__ == "__main__":
