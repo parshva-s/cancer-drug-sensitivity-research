@@ -114,6 +114,15 @@ class Dataset:
         data = data[feature_names]
         self.drug_cell_line_data = data
 
+    def create_data(self):
+        """create the dataset from the features and targets
+        """
+        if self.gene_expression_data.empty or self.drug_cell_line_data.empty:
+            print("Data has not been defined yet. Cannot create final dataset.")
+
+        # TODO: fix COSMIC ID column header not having name changed and join on "COSMIC_ID"
+        self.dataset = pd.merge(self.gene_expression_data, self.drug_cell_line_data, left_on="COSMIC ID", right_on="COSMIC_ID", how="left")
+
     def check_valid_file(self, file_name: str, data_directory: str) -> bool:
         """checks if a file is valid
 
