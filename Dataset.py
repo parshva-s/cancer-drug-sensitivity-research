@@ -34,8 +34,8 @@ class Dataset:
     def get_dataset_info(self):
         """Gets the info about the dataset
         """
-        if self.dataset_name == "GDSC":
-            print("This is the GDSC dataset.")
+        if self.dataset_name == "GDSC2":
+            print("This is the GDSC2 dataset.")
         else:
             print("No dataset was defined.")
 
