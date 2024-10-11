@@ -11,7 +11,10 @@ class Dataset:
             IC50_file: str = None,
             data_directory: str = None,
             create_data: bool = True):
-        self.dataset_name = dataset_name
+        
+        self.dataset_name = dataset_name # name of dataset
+        
+        # dataset parameters
         self.features = None
         self.targets = None
         self.feature_names = None
@@ -20,6 +23,7 @@ class Dataset:
         self.gene_expression_data = None
         self.drug_cell_line_data = None
         self.dataset = None
+        self.modes = ["gene", "compound", "final"]
 
         # create dataframes if file names are defined
         if gene_file is not None and data_directory is not None:
@@ -159,11 +163,8 @@ class Dataset:
             data_directory (str): the directory of where csv will be stored
             output_file_name (str, optional): name of the file to be stored to. Defaults to None.
         """
-        
-        acceptable_modes = ["gene", "compound", "final"]
-        
-        if mode not in acceptable_modes:
-            print(f"Invalid mode. Must enter modes from: {acceptable_modes}")
+        if mode not in self.modes:
+            print(f"Invalid mode. Must enter modes from: {self.modes}")
             return
         
         if output_file_name is not None:
@@ -189,7 +190,30 @@ class Dataset:
                     return
                 self.dataset.to_csv(data_directory + output_file_name)
         print(f"{mode} data saved in: {data_directory}{output_file_name}")
+    
+    def get_modes(self) -> list:
+        """returns available modes
 
+        Returns:
+            list: available modes
+        """
+        return self.modes
+
+
+def create_csv(modes : list, dataset : Dataset, csv_names : list, csv_directory : str = "data/") ->  None:
+    """creates csv files for defined
+
+    Args:
+        modes (list): list of modes for csv files to create
+        dataset (Dataset): dataset object that has all the datasets
+        csv_names (list): names of csv files to save each mode to
+        csv_directory (str, optional): Directory to save csv files to. Defaults to "data/".
+    """
+    for i in range(len(modes)):
+        if i < len(csv_names):
+            dataset.data_to_csv(modes[i], csv_directory, csv_names[i])
+        else:
+            dataset.data_to_csv(modes[i], csv_directory)
 
 if __name__ == "__main__":
     data_directory = "data/"
