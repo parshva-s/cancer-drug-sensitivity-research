@@ -147,14 +147,9 @@ class Dataset:
         if output_file_name is not None:
             if not output_file_name.endswith(".csv"):
                 output_file_name += ".csv"
-            self.gene_expression_data.to_csv(data_directory + output_file_name)
-            print(
-                "Gene Expression data saved in: " +
-                data_directory +
-                output_file_name)
         else:
-            self.gene_expression_data.to_csv(
-                data_directory + "gene_expression_out.csv")
+            output_file_name = f"{mode}_out.csv"
+        
 
 
 if __name__ == "__main__":
