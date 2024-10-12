@@ -11,9 +11,9 @@ class Dataset:
             IC50_file: str = None,
             data_directory: str = None,
             create_data: bool = True):
-        
-        self.dataset_name = dataset_name # name of dataset
-        
+
+        self.dataset_name = dataset_name  # name of dataset
+
         # dataset parameters
         self.features = None
         self.targets = None
@@ -31,10 +31,10 @@ class Dataset:
 
         if IC50_file is not None and data_directory is not None:
             self.set_targets_GDSC(IC50_file, data_directory)
-        
+
         if create_data:
             self.create_data()
-    
+
     def get_dataset_info(self):
         """Gets the info about the dataset
         """
@@ -114,7 +114,7 @@ class Dataset:
             "AUC",
             "RMSE",
             "Z_SCORE"]
-        
+
         data = data[feature_names]
         self.drug_cell_line_data = data
 
@@ -124,8 +124,14 @@ class Dataset:
         if self.gene_expression_data.empty or self.drug_cell_line_data.empty:
             print("Data has not been defined yet. Cannot create final dataset.")
 
-        # TODO: fix COSMIC ID column header not having name changed and join on "COSMIC_ID"
-        self.dataset = pd.merge(self.gene_expression_data, self.drug_cell_line_data, left_on="COSMIC ID", right_on="COSMIC_ID", how="left")
+        # TODO: fix COSMIC ID column header not having name changed and join on
+        # "COSMIC_ID"
+        self.dataset = pd.merge(
+            self.gene_expression_data,
+            self.drug_cell_line_data,
+            left_on="COSMIC ID",
+            right_on="COSMIC_ID",
+            how="left")
 
     def check_valid_file(self, file_name: str, data_directory: str) -> bool:
         """checks if a file is valid
@@ -166,31 +172,33 @@ class Dataset:
         if mode not in self.modes:
             print(f"Invalid mode. Must enter modes from: {self.modes}")
             return
-        
+
         if output_file_name is not None:
             if not output_file_name.endswith(".csv"):
                 output_file_name += ".csv"
         else:
             output_file_name = f"{mode}_out.csv"
-        
-        match mode:     
+
+        match mode:
             case "gene":
                 if self.gene_expression_data.empty:
                     print("Gene expression data not set.")
                     return
-                self.gene_expression_data.to_csv(data_directory + output_file_name)
+                self.gene_expression_data.to_csv(
+                    data_directory + output_file_name)
             case "compound":
                 if self.drug_cell_line_data.empty:
                     print("Drug cell line data not set.")
                     return
-                self.drug_cell_line_data.to_csv(data_directory + output_file_name)
+                self.drug_cell_line_data.to_csv(
+                    data_directory + output_file_name)
             case "final":
                 if self.dataset.empty:
                     print("Final data not set.")
                     return
                 self.dataset.to_csv(data_directory + output_file_name)
         print(f"{mode} data saved in: {data_directory}{output_file_name}")
-    
+
     def get_modes(self) -> list:
         """returns available modes
 
@@ -200,7 +208,11 @@ class Dataset:
         return self.modes
 
 
-def create_csv(modes : list, dataset : Dataset, csv_names : list, csv_directory : str = "data/") ->  None:
+def create_csv(
+        modes: list,
+        dataset: Dataset,
+        csv_names: list,
+        csv_directory: str = "data/") -> None:
     """creates csv files for defined
 
     Args:
@@ -215,16 +227,24 @@ def create_csv(modes : list, dataset : Dataset, csv_names : list, csv_directory 
         else:
             dataset.data_to_csv(modes[i], csv_directory)
 
+
 def main():
     dataset_name = "GDSC2"
     data_directory = "data/"
     gene_file_name = "gene_expression.csv"
     drug_file_name = "drug_cell_line.csv"
     create_final_dataset = True
-    
+
     # create dataset to be used
-    dataset = Dataset(dataset_name, gene_file_name, drug_file_name, data_directory, create_final_dataset)
-    create_csv(["final"], dataset, ["final_dataset.csv"], data_directory) # create csv for final dataset
+    dataset = Dataset(
+        dataset_name,
+        gene_file_name,
+        drug_file_name,
+        data_directory,
+        create_final_dataset)
+    create_csv(["final"], dataset, ["final_dataset.csv"],
+               data_directory)  # create csv for final dataset
+
 
 if __name__ == "__main__":
     main()
