@@ -1,9 +1,19 @@
-install.packages("affy")
-install.packages("BiocManager")
-BiocManager::install("affy")
-BiocManager::install("hgu219cdf")
-BiocManager::install("hgu219.db")
+install_if_missing <- function(package) {
+    if (!requireNamespace(package, quietly = TRUE)) {
+        install.packages(package)
+    }
+}
+install_bioc_if_missing <- function(package) {
+    if (!requireNamespace(package, quietly = TRUE)) {
+        BiocManager::install(package)
+    }
+}
 
+install_if_missing("affy")
+install_if_missing("BiocManager")
+install_bioc_if_missing("affy")
+install_bioc_if_missing("hgu219cdf")
+install_bioc_if_missing("hgu219.db")
 library(affy) # For reading and normalizing .cel files
 library(hgu219cdf) # For specifying the chip definition file (CDF) for the hgu219 array
 library(hgu219.db) # For accessing probe to gene symbol annotations
