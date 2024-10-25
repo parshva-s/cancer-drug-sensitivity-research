@@ -7,6 +7,7 @@ from sklearn.metrics import f1_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from scipy.stats import pearsonr
+from sklearn.preprocessing import StandardScaler
 
 
 def load_and_prepare_data(file_path: str, drop_columns: list, target_variable: str) -> pd.DataFrame:
@@ -43,7 +44,10 @@ def split_data(df: pd.DataFrame, top_features: list, target_variable: str):
     y = df[target_variable]
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42)
-    return X_train, X_test, y_train, y_test
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    return X_train_scaled, X_test_scaled, y_train, y_test
 
 
 def train_random_forest(X_train, y_train, n_estimators: int = 100):
@@ -136,4 +140,4 @@ end_time = time.time()
 print(f"Time taken: {end_time - start_time:.2f} seconds")
 
 # Plot the MSE values in a 3D graph
-plot_3d_mse(k_values, n_estimators_values, mse_values)
+# plot_3d_mse(k_values, n_estimators_values, mse_values)
