@@ -133,6 +133,48 @@ class Dataset:
             right_on="COSMIC_ID",
             how="left")
 
+        self.create_targets()
+        self.create_features()
+    
+    def create_data_from_csv(self, directory : str, file_name : str):
+        """create the dataset from a csv file
+
+        Args:
+            directory (str): directory of the file
+            file_name (str): name of the file
+        """
+        if not self.check_valid_file(file_name, directory):
+            return
+
+        self.dataset = pd.read_csv(directory + file_name)
+        self.create_targets()
+        self.create_features()
+    
+    def create_features(self):
+        """create the features from the dataset
+        """
+        if self.dataset is None:
+            print("Data has not been defined yet. Cannot create features.")
+            return
+
+        self.features = self.dataset.drop(
+            columns=[
+                "COSMIC_ID",
+                "DRUG_ID",
+                "LN_IC50",
+                "AUC",
+                "RMSE",
+                "Z_SCORE"])
+    
+    def create_targets(self):
+        """create the targets from the dataset
+        """
+        if self.dataset is None:
+            print("Data has not been defined yet. Cannot create targets.")
+            return
+
+        self.targets = self.dataset["LN_IC50"]
+
     def check_valid_file(self, file_name: str, data_directory: str) -> bool:
         """checks if a file is valid
 
