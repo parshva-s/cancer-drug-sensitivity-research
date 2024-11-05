@@ -54,8 +54,8 @@ def main():
     """
     Main function to execute the workflow.
     """
-    folder_path = 'data'
-    assay_to_cellLine = 'assay_to_cellLine_mapping.csv'
+    folder_path = 'data/CEL_FILES/'
+    assay_to_cellLine = 'preprocessor/assay_to_cellLine_mapping.csv'
     output_file = 'cell_line_expressions.csv'
 
     # Load, process files, and create DataFrame
