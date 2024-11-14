@@ -113,7 +113,8 @@ def main():
     drug_dataset = dataset.create_data(drug_id)
     
     # Define a list of n_components values to test
-    n_components_list = [20, 50, 100, 200, 300, 400, 500]
+    n_components_list = [5, 10, 15, 20, 25, 30, 35, 45, 50, 100]
+    # n_components_list = [20, 50, 100, 200, 300, 400, 500]
     
     # Apply the NMF pipeline to the dataset
     nmf_pipeline(dataset, drug_dataset, n_components_list)
