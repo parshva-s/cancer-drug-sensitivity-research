@@ -44,7 +44,7 @@ if __name__ == "__main__":
     df = dataset.create_data(drug_id)
     df.drop(columns=drop_columns, inplace=True)
 
-    k_values = [50]
+    k_values = [25, 50, 100]
     rf_param_grid = {
         'n_estimators': [50],
         'max_depth': [10],
@@ -55,6 +55,14 @@ if __name__ == "__main__":
         'epsilon': [1],
         'kernel': ['rbf']
     }
+    
+    en_param_grid = {
+        'alpha': [0.1, 0.5],
+        'l1_ratio': [0.1, 0.5]
+    }
+    
+    best_en_k, best_en_mse, best_en_params = None, float('inf'), None
+    
     target_variable = "LN_IC50"
 
     best_rf_mse, best_svr_mse = float('inf'), float('inf')
@@ -96,6 +104,19 @@ if __name__ == "__main__":
             best_svr_mse = svr_mse
             best_svr_k = k
             best_svr_params = svr_model.best_params_
+            
+        start_time = time.time()
+        en_model = grid_search_elastic_net(X_train, y_train, en_param_grid=en_param_grid)
+        en_mse, en_r2 = evaluate_model(en_model, X_test, y_test)
+        end_time = time.time()
+        print(
+            f"K={k}, Elastic Net - MSE: {en_mse:.4f}, R²: {en_r2:.4f}, Time: {end_time - start_time:.2f}s")
+        
+        # Update best model if this one has a lower MSE
+        if en_mse < best_en_mse:
+            best_en_mse = en_mse
+            best_en_k = k
+            best_en_params = en_model.best_params_
 
     # Print the best results
     print("\nBest Random Forest Model:")
@@ -103,3 +124,6 @@ if __name__ == "__main__":
 
     print("\nBest SVR Model:")
     print(f"K={best_svr_k}, MSE={best_svr_mse:.4f}, Params={best_svr_params}")
+    
+    print("\nBest Elastic Net Model:")
+    print(f"K={best_en_k}, MSE={best_en_mse:.4f}, Params={best_en_params}")
