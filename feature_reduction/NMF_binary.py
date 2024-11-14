@@ -85,6 +85,7 @@ def nmf_pipeline(dataset, n_components_list):
 def main():
     # Initialize dataset
     dataset_name = "GDSC2"
+    type = "binary"
     data_directory = "data/"
     gene_file_name = "gene_expression.csv"
     drug_file_name = "drug_cell_line.csv"
@@ -92,10 +93,10 @@ def main():
     # Create the dataset object
     dataset = Dataset(
         dataset_name=dataset_name,
+        type=type,
         gene_file=gene_file_name,
         IC50_file=drug_file_name,
         data_directory=data_directory,
-        create_data=True
     )
     
     # Define a list of n_components values to test

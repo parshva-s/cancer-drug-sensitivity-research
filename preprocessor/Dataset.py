@@ -22,6 +22,7 @@ class Dataset:
         self.drug_id_list = None
         self.current_drug_id = None
         self.feature_names = None
+        self.target_names = None
 
         # dataframes used
         self.gene_expression_data = None
@@ -126,7 +127,7 @@ class Dataset:
 
         data = pd.read_csv(data_directory + target_file)
 
-        target_names = [
+        self.target_names = [
             "CELL_LINE_NAME",
             "DRUG_ID",
             "LN_IC50",
@@ -134,7 +135,7 @@ class Dataset:
             "RMSE",
             "Z_SCORE"]
 
-        data = data[target_names]
+        data = data[self.target_names]
         self.drug_cell_line_data = data
 
     def create_data(self, drug_id):
