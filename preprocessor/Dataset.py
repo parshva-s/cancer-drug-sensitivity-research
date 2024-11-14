@@ -10,8 +10,7 @@ class Dataset:
             type: str,
             gene_file: str = None,
             IC50_file: str = None,
-            data_directory: str = None,
-            create_data: bool = True):
+            data_directory: str = None):
 
         self.dataset_name = dataset_name  # name of dataset
         if type not in ["binary", "expression"]:
@@ -20,7 +19,8 @@ class Dataset:
         self.type = type  # type of dataset
 
         # dataset parameters
-        self.drug_id = None
+        self.drug_id_list = None
+        self.current_drug_id = None
         self.feature_names = None
 
         # dataframes used
@@ -35,9 +35,12 @@ class Dataset:
 
         if IC50_file is not None and data_directory is not None:
             self.set_targets(IC50_file, data_directory)
+        
+        if self.drug_cell_line_data is not None:
+            self.create_drug_id_list()
 
-        if create_data:
-            self.create_data()
+        # if create_data:
+        #     self.create_data()
 
     def get_dataset_info(self):
         """Gets the info about the dataset
@@ -106,9 +109,8 @@ class Dataset:
             self.gene_expression_data = data.set_index("Cell_Line")
 
         # Rename gene columns to generic format (e.g., "gene_1", "gene_2", ...)
-        # TODO: create a mapping of gene names to generic format
         self.gene_expression_data.columns = [f"gene_{i+1}" for i in range(data.shape[1]-1)]
-        print(self.gene_expression_data.head(3))
+        
         # get list  of data headers
         self.feature_names = self.gene_expression_data.columns.tolist()
 
@@ -124,7 +126,7 @@ class Dataset:
 
         data = pd.read_csv(data_directory + target_file)
 
-        feature_names = [
+        target_names = [
             "CELL_LINE_NAME",
             "DRUG_ID",
             "LN_IC50",
@@ -132,26 +134,37 @@ class Dataset:
             "RMSE",
             "Z_SCORE"]
 
-        data = data[feature_names]
+        data = data[target_names]
         self.drug_cell_line_data = data
 
-    def create_data(self):
-        """create the dataset from the features and targets
-        """
+    def create_data(self, drug_id):
+        """Create a dataset for a specific drug ID without using chunks."""
         if self.gene_expression_data.empty or self.drug_cell_line_data.empty:
             print("Data has not been defined yet. Cannot create final dataset.")
             return
+
+        print(f"Creating dataset for drug ID: {drug_id}...")
+
+        # Filter the drug-cell line data for the specific drug ID
+        filtered_data = self.drug_cell_line_data[self.drug_cell_line_data['DRUG_ID'] == drug_id]
+        if filtered_data.empty:
+            print(f"No data found for drug ID: {drug_id}")
+            self.dataset = pd.DataFrame()
+            return
         
-        print("Creating final dataset...")
+        self.current_drug_id = drug_id
+        
+        # Merge the filtered data with gene expression data
         self.dataset = pd.merge(
             self.gene_expression_data,
-            self.drug_cell_line_data,
+            filtered_data,
             left_on="Cell_Line",
             right_on="CELL_LINE_NAME",
-            how="left")
+            how="left"
+        )
         
-        self.create_drug_id_dict()
-    
+        return self.dataset
+            
     def create_data_from_csv(self, directory : str, file_name : str):
         """create the dataset from a csv file
 
@@ -165,13 +178,11 @@ class Dataset:
         self.dataset = pd.read_csv(directory + file_name)
         self.create_drug_id_dict()
     
-    def create_drug_id_dict(self):
-        """create a dictionary where the key is the drug id and the value is the dataset for the cell lines, genes and drug response"""
-        print("Creating drug id dictionary...")
-        self.dataset = {drug_id: df.drop(columns=['DRUG_ID']).set_index('Cell_Line') 
-                    for drug_id, df in self.dataset.groupby('DRUG_ID')}
-        print(self.dataset)
-        self.drug_id = list(self.dataset.keys())
+    def create_drug_id_list(self):
+        """create a list of drug ids"""
+        print("Creating drug id list...")
+        
+        self.drug_id_list = self.drug_cell_line_data['DRUG_ID'].unique().tolist()
     
     def check_valid_file(self, file_name: str, data_directory: str) -> bool:
         """checks if a file is valid
@@ -237,8 +248,8 @@ class Dataset:
                     print("Final data not set.")
                     return
                 # test, only print the first drug id data
-                self.dataset[self.drug_id[0]].to_csv(data_directory + self.drug_id[0] + "_" + output_file_name)
-        print(f"{mode} data saved in: {data_directory}{output_file_name}")
+                self.dataset.to_csv(f"{data_directory}{self.current_drug_id}_{output_file_name}")
+        print(f"{mode} data saved in: {data_directory}{self.current_drug_id}_{output_file_name}")
 
     def get_modes(self) -> list:
         """returns available modes
@@ -248,13 +259,13 @@ class Dataset:
         """
         return self.modes
 
-    def get_drug_id(self) -> list:
+    def get_drug_id_list(self) -> list:
         """returns the drug ids
 
         Returns:
             list: drug ids
         """
-        return self.drug_id
+        return self.drug_id_list
 
 
 def create_csv(
@@ -279,11 +290,11 @@ def create_csv(
 
 def main():
     dataset_name = "CCLE"
+    drug_id = 1003
     type = "expression"
     data_directory = "data/"
     gene_file_name = "cell_line_expressions.csv"
     drug_file_name = "drug_cell_line.csv"
-    create_final_dataset = True
 
     # create dataset to be used
     dataset = Dataset(
@@ -291,11 +302,12 @@ def main():
         type,
         gene_file_name,
         drug_file_name,
-        data_directory,
-        create_final_dataset)
-    create_csv(["final"], dataset, ["final_drug_dataset.csv"],
-               data_directory)  # create csv for final dataset
-
+        data_directory)
+    
+    print(dataset.create_data(drug_id))
+    
+    # create_csv(["final"], dataset, [f"final_drug_{drug_id}_dataset.csv"],
+    #            data_directory)  # create csv for final dataset
 
 if __name__ == "__main__":
     main()
