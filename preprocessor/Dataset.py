@@ -155,13 +155,15 @@ class Dataset:
         self.current_drug_id = drug_id
         
         # Merge the filtered data with gene expression data
-        self.dataset = pd.merge(
+        merged_dataset = pd.merge(
             self.gene_expression_data,
             filtered_data,
             left_on="Cell_Line",
             right_on="CELL_LINE_NAME",
             how="left"
         )
+        
+        self.dataset = merged_dataset.dropna(subset=["LN_IC50"])
         
         return self.dataset
             
