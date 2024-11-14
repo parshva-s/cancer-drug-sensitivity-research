@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from Dataset import Dataset
+from preprocessor.Dataset import Dataset
 from sklearn.decomposition import NMF
 from sklearn.metrics import mean_squared_error, silhouette_score, accuracy_score
 from sklearn.cluster import KMeans
