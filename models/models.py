@@ -1,5 +1,6 @@
 import time
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import ElasticNet
 from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV

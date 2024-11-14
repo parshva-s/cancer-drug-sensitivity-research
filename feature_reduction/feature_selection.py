@@ -6,7 +6,7 @@ import os
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
-from models.models import evaluate_model, grid_search_random_forest, grid_search_svr
+from models.models import evaluate_model, grid_search_elastic_net, grid_search_random_forest, grid_search_svr
 from utils.common import split_data
 
 def perform_pearson_correlation(df: pd.DataFrame, target_variable: str, k: int = 200) -> pd.DataFrame:
