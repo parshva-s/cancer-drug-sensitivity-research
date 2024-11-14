@@ -44,7 +44,7 @@ if __name__ == "__main__":
     df = dataset.create_data(drug_id)
     df.drop(columns=drop_columns, inplace=True)
 
-    k_values = [25, 50, 100]
+    k_values = [25, 50, 100, 200, 500]
     rf_param_grid = {
         'n_estimators': [50],
         'max_depth': [10],
