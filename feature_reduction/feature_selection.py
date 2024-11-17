@@ -66,7 +66,7 @@ if __name__ == "__main__":
         top_features = top_K_pearson_df['Gene'].values
 
         # Split the data
-        X_train, X_test, y_train, y_test = split_data(
+        X_train, X_test, X_val, y_val, y_train, y_test = split_data(
             df, top_features, target_variable)
 
         # GridSearchCV for Random Forest
