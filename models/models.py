@@ -67,6 +67,17 @@ def train_neural_network(X_train, y_train, X_val, y_val, epochs=100, batch_size=
 
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
+    # training the model
+    history = model.fit(
+        X_train, y_train,
+        validation_data=(X_val, y_val),
+        epochs=epochs,
+        batch_size=batch_size,
+        verbose=1
+    )
+
+    return model, history
+
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
     mse = mean_squared_error(y_test, y_pred)
