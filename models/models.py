@@ -1,4 +1,5 @@
 import time
+import keras
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error, r2_score
@@ -56,6 +57,15 @@ def train_neural_network(X_train, y_train, X_val, y_val, epochs=100, batch_size=
         model: trained neural network model
         history: training history
     """
+    
+    # neural network model architecture
+    model = keras.Sequential([
+        keras.layers.Dense(128, activation='relu', input_shape=(X_train.shape[1],)),
+        keras.layers.Dense(64, activation='relu'),
+        keras.layers.Dense(1)  # Output layer for regression
+    ])
+
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
