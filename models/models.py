@@ -40,6 +40,22 @@ def grid_search_svr(X_train, y_train, svr_param_grid=None):
     grid_search_svr.fit(X_train, y_train)
     return grid_search_svr
 
+def train_neural_network(X_train, y_train, X_val, y_val, epochs=100, batch_size=32):
+    """
+    Training neural network model
+
+    Args:
+        X_train (pd.Dataframe): features for training
+        y_train (pd.Dataframe): target for training
+        X_val (pd.Dataframe): features for validation
+        y_val (pd.Dataframe): target for validation
+        epochs (int, optional): epochs for training. Defaults to 100.
+        batch_size (int, optional): batches for training. Defaults to 32.
+    
+    Returns:
+        model: trained neural network model
+        history: training history
+    """
 
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
