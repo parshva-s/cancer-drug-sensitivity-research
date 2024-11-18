@@ -6,7 +6,7 @@ import os
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
-from models.models import evaluate_model, grid_search_random_forest, grid_search_svr
+from models.models import evaluate_model, grid_search_random_forest, grid_search_svr, train_neural_network
 from utils.common import split_data
 
 def perform_pearson_correlation(df: pd.DataFrame, target_variable: str, k: int = 200) -> pd.DataFrame:
@@ -90,6 +90,14 @@ if __name__ == "__main__":
         end_time = time.time()
         print(
             f"K={k}, SVR - MSE: {svr_mse:.4f}, R²: {svr_r2:.4f}, Time: {end_time - start_time:.2f}s")
+        
+        # Using Neural Network
+        start_time = time.time()
+        nn_model, history = train_neural_network(X_train, y_train, X_val, y_val)
+        nn_mse, nn_r2 = evaluate_model(nn_model, X_test, y_test)
+        end_time = time.time()
+        print(
+            f"K={k}, Neural Network - MSE: {nn_mse:.4f}, R²: {nn_r2:.4f}, Time: {end_time - start_time:.2f}s")
 
         # Update best model if this one has a lower MSE
         if svr_mse < best_svr_mse:
