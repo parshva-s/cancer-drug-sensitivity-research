@@ -60,6 +60,7 @@ if __name__ == "__main__":
     best_rf_mse, best_svr_mse = float('inf'), float('inf')
     best_rf_k, best_svr_k = None, None
     best_rf_params, best_svr_params = None, None
+    best_nn_k, best_nn_mse, best_nn_params = None, float('inf'), None
 
     for k in k_values:
         top_K_pearson_df = perform_pearson_correlation(df, target_variable, k)
@@ -91,6 +92,12 @@ if __name__ == "__main__":
         print(
             f"K={k}, SVR - MSE: {svr_mse:.4f}, R²: {svr_r2:.4f}, Time: {end_time - start_time:.2f}s")
         
+        # Update best model if this one has a lower MSE
+        if svr_mse < best_svr_mse:
+            best_svr_mse = svr_mse
+            best_svr_k = k
+            best_svr_params = svr_model.best_params_        
+        
         # Using Neural Network
         start_time = time.time()
         nn_model, history = train_neural_network(X_train, y_train, X_val, y_val)
@@ -98,12 +105,12 @@ if __name__ == "__main__":
         end_time = time.time()
         print(
             f"K={k}, Neural Network - MSE: {nn_mse:.4f}, R²: {nn_r2:.4f}, Time: {end_time - start_time:.2f}s")
-
+        
         # Update best model if this one has a lower MSE
-        if svr_mse < best_svr_mse:
-            best_svr_mse = svr_mse
-            best_svr_k = k
-            best_svr_params = svr_model.best_params_
+        if nn_mse < best_nn_mse:
+            best_nn_mse = nn_mse
+            best_nn_k = k
+            best_nn_params = nn_model.get_config()
 
     # Print the best results
     print("\nBest Random Forest Model:")
