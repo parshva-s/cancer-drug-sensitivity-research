@@ -18,5 +18,7 @@ def main():
         data_directory=data_directory,
     )
     df = dataset.create_data(drug_id)
+    df.drop(columns=drop_columns, inplace=True)
+
 if __name__ == "__main__":
     main()
