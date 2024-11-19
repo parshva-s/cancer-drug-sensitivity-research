@@ -127,7 +127,8 @@ def plot_results(results):
         plt.ylabel('Mean Squared Error')
         plt.title(f'Model Performance for {method} Reduction Technique')
         plt.legend()
-        plt.show()
+        plt.savefig(f'./data/mse_{method}.png')
+        plt.close()
 
 if __name__ == "__main__":
     main()
