@@ -23,6 +23,25 @@ def perform_pearson_correlation(df: pd.DataFrame, target_variable: str, k: int =
     return pearson_df_sorted.head(k)
 
 
+def get_rf_results(k, X_train, y_train, X_test, y_test, rf_param_grid):
+    start_time = time.time()
+    rf_model = grid_search_random_forest(X_train, y_train, rf_param_grid)
+    rf_mse, rf_r2 = evaluate_model(rf_model, X_test, y_test)
+    end_time = time.time()
+    print(f"K={k}, Random Forest - MSE: {rf_mse:.4f}, R²: {rf_r2:.4f}, Time: {end_time - start_time:.2f}s")
+    return rf_mse, rf_r2, rf_model.best_params_
+
+
+def get_svr_results(k, X_train, y_train, X_test, y_test, svr_param_grid):
+    start_time = time.time()
+    svr_model = grid_search_svr(X_train, y_train, svr_param_grid)
+    svr_mse, svr_r2 = evaluate_model(svr_model, X_test, y_test)
+    end_time = time.time()
+    print(
+        f"K={k}, SVR - MSE: {svr_mse:.4f}, R²: {svr_r2:.4f}, Time: {end_time - start_time:.2f}s")
+    return svr_mse, svr_r2, svr_model.best_params_
+
+
 if __name__ == "__main__":
     from preprocessor.Dataset import Dataset
     dataset_name = "CCLE"
@@ -70,32 +89,20 @@ if __name__ == "__main__":
             df, top_features, target_variable)
 
         # GridSearchCV for Random Forest
-        start_time = time.time()
-        rf_model = grid_search_random_forest(X_train, y_train, rf_param_grid)
-        rf_mse, rf_r2 = evaluate_model(rf_model, X_test, y_test)
-        end_time = time.time()
-        print(
-            f"K={k}, Random Forest - MSE: {rf_mse:.4f}, R²: {rf_r2:.4f}, Time: {end_time - start_time:.2f}s")
-
-        # Update best model if this one has a lower MSE
+        rf_mse, rf_r2, rf_best_params = get_rf_results(
+            k, X_train, y_train, X_test, y_test, rf_param_grid)
         if rf_mse < best_rf_mse:
             best_rf_mse = rf_mse
             best_rf_k = k
-            best_rf_params = rf_model.best_params_
+            best_rf_params = rf_best_params
 
         # GridSearchCV for SVR
-        start_time = time.time()
-        svr_model = grid_search_svr(X_train, y_train, svr_param_grid)
-        svr_mse, svr_r2 = evaluate_model(svr_model, X_test, y_test)
-        end_time = time.time()
-        print(
-            f"K={k}, SVR - MSE: {svr_mse:.4f}, R²: {svr_r2:.4f}, Time: {end_time - start_time:.2f}s")
-
-        # Update best model if this one has a lower MSE
+        svr_mse, svr_r2, svr_best_params_ = get_svr_results(
+            k, X_train, y_train, X_test, y_test, svr_param_grid)
         if svr_mse < best_svr_mse:
             best_svr_mse = svr_mse
             best_svr_k = k
-            best_svr_params = svr_model.best_params_
+            best_svr_params = svr_best_params_
 
     # Print the best results
     print("\nBest Random Forest Model:")
