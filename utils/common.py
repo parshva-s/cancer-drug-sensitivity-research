@@ -22,7 +22,13 @@ def split_data(df: pd.DataFrame, top_features: list, target_variable: str, test_
     y = df[target_variable]
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=42)
+    
+    # validation split (50% of test set)
+    X_val, X_test, y_val, y_test = train_test_split(
+        X_test, y_test, test_size=0.5, random_state=42)
+    
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
+    X_val_scaled = scaler.transform(X_val)
     X_test_scaled = scaler.transform(X_test)
-    return X_train_scaled, X_test_scaled, y_train, y_test
+    return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
