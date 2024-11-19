@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+import matplotlib.pyplot as plt
 from preprocessor.Dataset import Dataset
 from feature_reduction.NMF_expression import apply_nmf
 from models.models import grid_search_random_forest, grid_search_svr, grid_search_elastic_net, train_neural_network, evaluate_model
@@ -54,6 +55,9 @@ def main():
                     X = pd.DataFrame(W), y = y)
 
                 evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
+
+    plot_results(results)
+
 def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results):
     """
     Evaluate different models for a given feature reduction method.
@@ -97,6 +101,31 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     nn_mse, _ = evaluate_model(nn_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Neural Network', k, nn_mse, elapsed_time))
+
+def plot_results(results):
+    """
+    Plot the results of the evaluation.
+
+    Args:
+        results (list): list of results for each model and reduction method
+    """
+    # convert results to DataFrame
+    df_results = pd.DataFrame(results, columns=['Method', 'Model', 'K/Components', 'MSE', 'Time'])
+
+    # generate plots for each feature reduction method
+    methods = df_results['Method'].unique()
+    for method in methods:
+        plt.figure(figsize=(12, 6))
+        subset = df_results[df_results['Method'] == method]
+        for model in subset['Model'].unique():
+            model_subset = subset[subset['Model'] == model]
+            plt.plot(model_subset['K/Components'], model_subset['MSE'], marker='o', label=model)
+
+        plt.xlabel('Number of K/Components')
+        plt.ylabel('Mean Squared Error')
+        plt.title(f'Model Performance for {method} Reduction Technique')
+        plt.legend()
+        plt.show()
 
 if __name__ == "__main__":
     main()
