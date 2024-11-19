@@ -118,3 +118,6 @@ if __name__ == "__main__":
 
     print("\nBest SVR Model:")
     print(f"K={best_svr_k}, MSE={best_svr_mse:.4f}, Params={best_svr_params}")
+    
+    print("\nBest Neural Network Model:")
+    print(f"K={best_nn_k}, MSE={best_nn_mse:.4f}")
