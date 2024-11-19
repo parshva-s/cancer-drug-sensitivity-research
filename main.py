@@ -17,6 +17,8 @@ def main():
     drug_file_name = "drug_cell_line.csv"
     drop_columns = ['AUC', 'Z_SCORE', 'RMSE', 'CELL_LINE_NAME', 'DRUG_ID']
     target_variable = "LN_IC50"
+    
+    reduction_methods = ['pearson', 'nmf']
 
     # feature parameters
     k_values = [25, 50]
@@ -37,7 +39,7 @@ def main():
     # Collect results
     results = []
     # Test different feature selection and dimensionality reduction techniques
-    for method in ['pearson', 'nmf']:
+    for method in reduction_methods:
         if method == 'pearson':
             for k in k_values:
                 top_K_pearson_df = perform_pearson_correlation(df, target_variable, k)
@@ -71,7 +73,7 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
         y_test (pd.DataFrame): target for testing
         k (int): number of features/components
         method (Any): reduction method used
-        results (list): list to store results
+        results (list): list to store results. A tuple of (method, model, k, mse, time) is appended to the list.
     """
     
     # evaluate Random Forest
