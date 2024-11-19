@@ -73,7 +73,7 @@ def train_neural_network(X_train, y_train, X_val, y_val, epochs=100, batch_size=
         validation_data=(X_val, y_val),
         epochs=epochs,
         batch_size=batch_size,
-        verbose=1
+        verbose=0
     )
 
     return model, history
