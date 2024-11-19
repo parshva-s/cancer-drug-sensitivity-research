@@ -3,11 +3,11 @@ from scipy.stats import pearsonr
 import pandas as pd
 import sys
 import os
+from models.models import evaluate_model, grid_search_random_forest, grid_search_svr, train_neural_network, grid_search_elastic_net, grid_search_svr
+from utils.common import split_data
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
-from models.models import evaluate_model, grid_search_elastic_net, grid_search_random_forest, grid_search_svr
-from utils.common import split_data
 
 def perform_pearson_correlation(df: pd.DataFrame, target_variable: str, k: int = 200) -> pd.DataFrame:
     pearson_correlations = {}
@@ -68,13 +68,14 @@ if __name__ == "__main__":
     best_rf_mse, best_svr_mse = float('inf'), float('inf')
     best_rf_k, best_svr_k = None, None
     best_rf_params, best_svr_params = None, None
+    best_nn_k, best_nn_mse, best_nn_params = None, float('inf'), None
 
     for k in k_values:
         top_K_pearson_df = perform_pearson_correlation(df, target_variable, k)
         top_features = top_K_pearson_df['Gene'].values
 
         # Split the data
-        X_train, X_test, y_train, y_test = split_data(
+        X_train, X_val, X_test, y_train, y_val, y_test = split_data(
             df, top_features, target_variable)
 
         # GridSearchCV for Random Forest
@@ -91,6 +92,7 @@ if __name__ == "__main__":
             best_rf_k = k
             best_rf_params = rf_model.best_params_
 
+            
         # GridSearchCV for SVR
         start_time = time.time()
         svr_model = grid_search_svr(X_train, y_train, svr_param_grid)
@@ -98,13 +100,15 @@ if __name__ == "__main__":
         end_time = time.time()
         print(
             f"K={k}, SVR - MSE: {svr_mse:.4f}, R²: {svr_r2:.4f}, Time: {end_time - start_time:.2f}s")
-
+        
         # Update best model if this one has a lower MSE
         if svr_mse < best_svr_mse:
             best_svr_mse = svr_mse
             best_svr_k = k
             best_svr_params = svr_model.best_params_
-            
+        
+        
+        # GridSearchCV for Elastic net
         start_time = time.time()
         en_model = grid_search_elastic_net(X_train, y_train, en_param_grid=en_param_grid)
         en_mse, en_r2 = evaluate_model(en_model, X_test, y_test)
@@ -116,7 +120,22 @@ if __name__ == "__main__":
         if en_mse < best_en_mse:
             best_en_mse = en_mse
             best_en_k = k
-            best_en_params = en_model.best_params_
+            best_en_params = en_model.best_params_  
+        
+        
+        # Using Neural Network
+        start_time = time.time()
+        nn_model, history = train_neural_network(X_train, y_train, X_val, y_val)
+        nn_mse, nn_r2 = evaluate_model(nn_model, X_test, y_test)
+        end_time = time.time()
+        print(
+            f"K={k}, Neural Network - MSE: {nn_mse:.4f}, R²: {nn_r2:.4f}, Time: {end_time - start_time:.2f}s")
+        
+        # Update best model if this one has a lower MSE
+        if nn_mse < best_nn_mse:
+            best_nn_mse = nn_mse
+            best_nn_k = k
+            best_nn_params = nn_model.get_config()
 
     # Print the best results
     print("\nBest Random Forest Model:")
@@ -125,5 +144,8 @@ if __name__ == "__main__":
     print("\nBest SVR Model:")
     print(f"K={best_svr_k}, MSE={best_svr_mse:.4f}, Params={best_svr_params}")
     
+
     print("\nBest Elastic Net Model:")
     print(f"K={best_en_k}, MSE={best_en_mse:.4f}, Params={best_en_params}")
+    print("\nBest Neural Network Model:")
+    print(f"K={best_nn_k}, MSE={best_nn_mse:.4f}")
