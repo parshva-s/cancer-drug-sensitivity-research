@@ -1,6 +1,7 @@
 import time
 import keras
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import ElasticNet
 from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
@@ -40,6 +41,22 @@ def grid_search_svr(X_train, y_train, svr_param_grid=None):
         estimator=svr, param_grid=svr_param_grid, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
     grid_search_svr.fit(X_train, y_train)
     return grid_search_svr
+
+def grid_search_elastic_net(X_train, y_train, en_param_grid=None):
+    """
+    Perform GridSearchCV for Elastic Net Regressor.
+    If no en_param_grid is provided, default grid parameters will be used.
+    """
+    if en_param_grid is None:
+        en_param_grid = {
+            'alpha': [0.1, 0.5, 1.0, 5.0, 10.0],
+            'l1_ratio': [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        }
+    en = ElasticNet(random_state=42)
+    grid_search_en = GridSearchCV(
+        estimator=en, param_grid=en_param_grid, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
+    grid_search_en.fit(X_train, y_train)
+    return grid_search_en
 
 def train_neural_network(X_train, y_train, X_val, y_val, epochs=100, batch_size=32):
     """
