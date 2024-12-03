@@ -6,7 +6,7 @@ from feature_reduction.NMF_expression import apply_nmf
 from models.models import grid_search_random_forest, grid_search_svr, grid_search_elastic_net, train_neural_network, evaluate_model
 from utils.common import split_data
 from feature_reduction.feature_selection import perform_pearson_correlation
-
+from feature_reduction.PCA import perform_pca
 
 def main():
     dataset_name = "CCLE"
@@ -18,12 +18,12 @@ def main():
     drop_columns = ['AUC', 'Z_SCORE', 'RMSE', 'CELL_LINE_NAME', 'DRUG_ID']
     target_variable = "LN_IC50"
     
-    reduction_methods = ['pearson', 'nmf']
+    reduction_methods = ['pearson', 'nmf', 'pca']
 
     # feature parameters
-    k_values = [25, 50]
-    n_components_list = [15, 20]
-
+    k_values = [10, 25, 50]
+    n_components_list = [10, 20, 50]
+    pca_components = [10, 20, 30]
 
     # initialize dataset
     dataset = Dataset(
@@ -55,6 +55,14 @@ def main():
                 W, _, _ = apply_nmf(X, n_components)
                 X_train, X_val, X_test, y_train, y_val, y_test = split_data(
                     X = pd.DataFrame(W), y = y)
+
+                evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
+        elif method == 'pca':
+            X = df.drop(columns=[target_variable])
+            y = df[target_variable]
+            for n_components in pca_components:
+                X_train, X_val, X_test, y_train, y_val, y_test = split_data(X = X, y = y)
+                X_train, X_val, X_test = perform_pca(n_components, X_train, X_val, X_test)
 
                 evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
 
