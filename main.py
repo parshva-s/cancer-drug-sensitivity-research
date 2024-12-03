@@ -23,7 +23,7 @@ def main():
     # feature parameters
     k_values = [10, 25, 50]
     n_components_list = [10, 20, 50]
-
+    pca_components = [10, 20, 30]
 
     # initialize dataset
     dataset = Dataset(
@@ -60,7 +60,7 @@ def main():
         elif method == 'pca':
             X = df.drop(columns=[target_variable])
             y = df[target_variable]
-            for n_components in n_components_list:
+            for n_components in pca_components:
                 X_train, X_val, X_test, y_train, y_val, y_test = split_data(X = X, y = y)
                 X_train, X_val, X_test = perform_pca(n_components, X_train, X_val, X_test)
 
