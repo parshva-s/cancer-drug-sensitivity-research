@@ -18,7 +18,7 @@ def main():
     drop_columns = ['AUC', 'Z_SCORE', 'RMSE', 'CELL_LINE_NAME', 'DRUG_ID']
     target_variable = "LN_IC50"
     
-    reduction_methods = ['pca']
+    reduction_methods = ['pearson', 'nmf', 'pca']
 
     # feature parameters
     k_values = [10, 25, 50]
