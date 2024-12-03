@@ -33,38 +33,43 @@ def main():
         IC50_file=drug_file_name,
         data_directory=data_directory,
     )
-    df = dataset.create_data(drug_id)
-    df.drop(columns=drop_columns, inplace=True)
-
-    # Collect results
+    
     results = []
-    # Test different feature selection and dimensionality reduction techniques
-    for method in reduction_methods:
-        if method == 'pearson':
-            for k in k_values:
-                top_K_pearson_df = perform_pearson_correlation(df, target_variable, k)
-                top_features = top_K_pearson_df['Gene'].values
-                X_train, X_val, X_test, y_train, y_val, y_test = split_data(
-                    df, top_features, target_variable)
-                
-                evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results)
-        elif method == 'nmf':
-            X = df.drop(columns=[target_variable])
-            y = df[target_variable]
-            for n_components in n_components_list:
-                W, _, _ = apply_nmf(X, n_components)
-                X_train, X_val, X_test, y_train, y_val, y_test = split_data(
-                    X = pd.DataFrame(W), y = y)
+    dataset.create_drug_id_list()
+    drug_ids = dataset.get_drug_id_list()
 
-                evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
-        elif method == 'pca':
-            X = df.drop(columns=[target_variable])
-            y = df[target_variable]
-            for n_components in pca_components:
-                X_train, X_val, X_test, y_train, y_val, y_test = split_data(X = X, y = y)
-                X_train, X_val, X_test = perform_pca(n_components, X_train, X_val, X_test)
+    for drug_id in drug_ids:
+        df = dataset.create_data(drug_id)
+        df.drop(columns=drop_columns, inplace=True)
 
-                evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
+        # Collect results
+        # Test different feature selection and dimensionality reduction techniques
+        for method in reduction_methods:
+            if method == 'pearson':
+                for k in k_values:
+                    top_K_pearson_df = perform_pearson_correlation(df, target_variable, k)
+                    top_features = top_K_pearson_df['Gene'].values
+                    X_train, X_val, X_test, y_train, y_val, y_test = split_data(
+                        df, top_features, target_variable)
+                    
+                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results)
+            elif method == 'nmf':
+                X = df.drop(columns=[target_variable])
+                y = df[target_variable]
+                for n_components in n_components_list:
+                    W, _, _ = apply_nmf(X, n_components)
+                    X_train, X_val, X_test, y_train, y_val, y_test = split_data(
+                        X = pd.DataFrame(W), y = y)
+
+                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
+            elif method == 'pca':
+                X = df.drop(columns=[target_variable])
+                y = df[target_variable]
+                for n_components in pca_components:
+                    X_train, X_val, X_test, y_train, y_val, y_test = split_data(X = X, y = y)
+                    X_train, X_val, X_test = perform_pca(n_components, X_train, X_val, X_test)
+
+                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
 
     plot_results(results)
 
