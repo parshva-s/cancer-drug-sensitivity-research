@@ -155,7 +155,7 @@ def plot_results(results):
         plt.savefig(f'./data/plots/avg_mse_{method}.png')
         plt.close()
 
-    print("Graphs saved to './data/' folder.")
+    print("Graphs saved to './data/plots/' folder.")
 
 if __name__ == "__main__":
     main()
