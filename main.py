@@ -18,7 +18,7 @@ def main():
     drop_columns = ['AUC', 'Z_SCORE', 'RMSE', 'CELL_LINE_NAME', 'DRUG_ID']
     target_variable = "LN_IC50"
     
-    reduction_methods = ['pearson', 'nmf', 'pca']
+    reduction_methods = ['pearson', 'pca']
 
     # feature parameters
     k_values = [10, 25, 50]
@@ -37,12 +37,14 @@ def main():
     results = []
     dataset.create_drug_id_list()
     drug_ids = dataset.get_drug_id_list()
+    
+    # FOR TESTING PURPOSES
+    # drug_ids = drug_ids[0:5]
 
     for drug_id in drug_ids:
         df = dataset.create_data(drug_id)
         df.drop(columns=drop_columns, inplace=True)
 
-        # Collect results
         # Test different feature selection and dimensionality reduction techniques
         for method in reduction_methods:
             if method == 'pearson':
@@ -52,7 +54,7 @@ def main():
                     X_train, X_val, X_test, y_train, y_val, y_test = split_data(
                         df, top_features, target_variable)
                     
-                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results)
+                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results, drug_id)
             elif method == 'nmf':
                 X = df.drop(columns=[target_variable])
                 y = df[target_variable]
@@ -61,7 +63,7 @@ def main():
                     X_train, X_val, X_test, y_train, y_val, y_test = split_data(
                         X = pd.DataFrame(W), y = y)
 
-                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
+                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results, drug_id)
             elif method == 'pca':
                 X = df.drop(columns=[target_variable])
                 y = df[target_variable]
@@ -69,11 +71,11 @@ def main():
                     X_train, X_val, X_test, y_train, y_val, y_test = split_data(X = X, y = y)
                     X_train, X_val, X_test = perform_pca(n_components, X_train, X_val, X_test)
 
-                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results)
-
+                    evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, n_components, method, results, drug_id)
+    print("Evaluation complete.")
     plot_results(results)
 
-def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results):
+def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, results, drug_id):
     """
     Evaluate different models for a given feature reduction method.
 
@@ -87,6 +89,7 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
         k (int): number of features/components
         method (Any): reduction method used
         results (list): list to store results. A tuple of (method, model, k, mse, time) is appended to the list.
+        drug_id (int): drug id data used to evaluate model
     """
     
     # evaluate Random Forest
@@ -94,54 +97,65 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     rf_model = grid_search_random_forest(X_train, y_train)
     rf_mse, _ = evaluate_model(rf_model, X_test, y_test)
     elapsed_time = time.time() - start_time
-    results.append((method, 'Random Forest', k, rf_mse, elapsed_time))
+    results.append((method, 'Random Forest', k, rf_mse, elapsed_time, drug_id))
 
     # evaluate SVR
     start_time = time.time()
     svr_model = grid_search_svr(X_train, y_train)
     svr_mse, _ = evaluate_model(svr_model, X_test, y_test)
     elapsed_time = time.time() - start_time
-    results.append((method, 'SVR', k, svr_mse, elapsed_time))
+    results.append((method, 'SVR', k, svr_mse, elapsed_time, drug_id))
 
     # evaluate Elastic Net
     start_time = time.time()
     en_model = grid_search_elastic_net(X_train, y_train)
     en_mse, _ = evaluate_model(en_model, X_test, y_test)
     elapsed_time = time.time() - start_time
-    results.append((method, 'Elastic Net', k, en_mse, elapsed_time))
+    results.append((method, 'Elastic Net', k, en_mse, elapsed_time, drug_id))
 
     # evaluate Neural Network
     start_time = time.time()
     nn_model, _ = train_neural_network(X_train, y_train, X_val, y_val)
     nn_mse, _ = evaluate_model(nn_model, X_test, y_test)
     elapsed_time = time.time() - start_time
-    results.append((method, 'Neural Network', k, nn_mse, elapsed_time))
+    results.append((method, 'Neural Network', k, nn_mse, elapsed_time, drug_id))
 
 def plot_results(results):
     """
-    Plot the results of the evaluation.
+    Plot the average MSE results across drug IDs for each dimensionality reduction technique and model.
 
     Args:
-        results (list): list of results for each model and reduction method
+        results (list): List of results for each drug ID and reduction method.
     """
-    # convert results to DataFrame
-    df_results = pd.DataFrame(results, columns=['Method', 'Model', 'K/Components', 'MSE', 'Time'])
+    # Convert results to a DataFrame
+    df_results = pd.DataFrame(results, columns=['Method', 'Model', 'K/Components', 'MSE', 'Time', 'Drug ID'])
 
-    # generate plots for each feature reduction method
-    methods = df_results['Method'].unique()
+    # Aggregate MSE by Method, Model, and K/Components
+    avg_results = df_results.groupby(['Method', 'Model', 'K/Components']).agg({'MSE': 'mean'}).reset_index()
+
+    # Plot the average MSE for each method and model
+    methods = avg_results['Method'].unique()
     for method in methods:
         plt.figure(figsize=(12, 6))
-        subset = df_results[df_results['Method'] == method]
-        for model in subset['Model'].unique():
-            model_subset = subset[subset['Model'] == model]
-            plt.plot(model_subset['K/Components'], model_subset['MSE'], marker='o', label=model)
+        method_subset = avg_results[avg_results['Method'] == method]
+        for model in method_subset['Model'].unique():
+            model_subset = method_subset[method_subset['Model'] == model]
+            plt.plot(
+                model_subset['K/Components'], 
+                model_subset['MSE'], 
+                marker='o', 
+                label=model
+            )
 
-        plt.xlabel('Number of K/Components')
-        plt.ylabel('Mean Squared Error')
-        plt.title(f'Model Performance for {method} Reduction Technique')
+        plt.xlabel('Number of Features/Components')
+        plt.ylabel('Average Mean Squared Error')
+        plt.title(f'Average Model Performance for {method.upper()} Reduction Technique')
         plt.legend()
-        plt.savefig(f'./data/mse_{method}.png')
+        plt.grid(True)
+        plt.savefig(f'./data/plots/avg_mse_{method}.png')
         plt.close()
+
+    print("Graphs saved to './data/' folder.")
 
 if __name__ == "__main__":
     main()
