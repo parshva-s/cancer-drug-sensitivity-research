@@ -48,6 +48,8 @@ class Dataset:
         """
         if self.dataset_name == "GDSC2":
             print("This is the GDSC2 dataset.")
+        elif self.dataset_name == "ArrayExpress":
+            print("This is the ArrayExpress dataset.")
         elif self.dataset_name == "CCLE":
             print("This is the CCLE dataset.")
         else:
