@@ -91,31 +91,30 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
         results (list): list to store results. A tuple of (method, model, k, mse, time) is appended to the list.
         drug_id (int): drug id data used to evaluate model
     """
-    
     # evaluate Random Forest
     start_time = time.time()
-    rf_model = grid_search_random_forest(X_train, y_train)
+    rf_model = grid_search_random_forest(drug_id, method, k, X_train, y_train)
     rf_mse, _ = evaluate_model(rf_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Random Forest', k, rf_mse, elapsed_time, drug_id))
 
     # evaluate SVR
     start_time = time.time()
-    svr_model = grid_search_svr(X_train, y_train)
+    svr_model = grid_search_svr(drug_id, method, k, X_train, y_train)
     svr_mse, _ = evaluate_model(svr_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'SVR', k, svr_mse, elapsed_time, drug_id))
 
     # evaluate Elastic Net
     start_time = time.time()
-    en_model = grid_search_elastic_net(X_train, y_train)
+    en_model = grid_search_elastic_net(drug_id, method, k, X_train, y_train)
     en_mse, _ = evaluate_model(en_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Elastic Net', k, en_mse, elapsed_time, drug_id))
 
     # evaluate Neural Network
     start_time = time.time()
-    nn_model, _ = train_neural_network(X_train, y_train, X_val, y_val)
+    nn_model, _ = train_neural_network(drug_id, method, k, X_train, y_train, X_val, y_val)
     nn_mse, _ = evaluate_model(nn_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Neural Network', k, nn_mse, elapsed_time, drug_id))
