@@ -116,6 +116,7 @@ class Dataset:
                 # map cell line to id in first column to cell line name in cell_line_mapping.csv which contains the id and drug names
                 cell_line_mapping = pd.read_csv(data_directory + "cell_line_mapping_ccle.csv")
                 cell_line_mapping = dict(zip(cell_line_mapping["ModelID"], cell_line_mapping["CellLineName"]))
+                data["Cell_Line"] = data["Cell_Line"].map(cell_line_mapping)
                 
             self.gene_expression_data = data.set_index("Cell_Line")
 
