@@ -307,7 +307,7 @@ def main():
     drug_id = 1003
     type = "expression"
     data_directory = "data/"
-    gene_file_name = "cell_line_expressions.csv"
+    gene_file_name = "cell_line_expressions_ccle.csv"
     drug_file_name = "drug_cell_line.csv"
 
     # create dataset to be used
@@ -318,7 +318,8 @@ def main():
         drug_file_name,
         data_directory)
     
-    print(dataset.create_data(drug_id))
+    # print(dataset.create_data(drug_id))
+    # dataset.create_data(drug_id)  # create dataset for drug id
     
     # create_csv(["final"], dataset, [f"final_drug_{drug_id}_dataset.csv"],
     #            data_directory)  # create csv for final dataset
