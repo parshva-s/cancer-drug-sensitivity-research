@@ -109,6 +109,14 @@ class Dataset:
         
         # set gene expression data
         if self.type == "expression":
+            # check if column with cell line names exists
+            if self.dataset_name == "CCLE":
+                # rename the first column to "Cell_Line"
+                data.rename(columns={data.columns[0]: "Cell_Line"}, inplace=True)
+                # map cell line to id in first column to cell line name in cell_line_mapping.csv which contains the id and drug names
+                cell_line_mapping = pd.read_csv(data_directory + "cell_line_mapping_ccle.csv")
+                cell_line_mapping = dict(zip(cell_line_mapping["ModelID"], cell_line_mapping["CellLineName"]))
+                
             self.gene_expression_data = data.set_index("Cell_Line")
 
         # Rename gene columns to generic format (e.g., "gene_1", "gene_2", ...)
