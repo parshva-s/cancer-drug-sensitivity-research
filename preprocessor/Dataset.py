@@ -323,6 +323,39 @@ def main():
     
     # create_csv(["final"], dataset, [f"final_drug_{drug_id}_dataset.csv"],
     #            data_directory)  # create csv for final dataset
+    
+    '''
+    Templates for using dataset object
+    
+    # CCLE dataset
+    dataset_name = "CCLE"
+    type = "expression"
+    gene_file_name = "cell_line_expressions_ccle.csv"
+    drug_file_name = "drug_cell_line.csv"
+    data_directory = "data/"
+    
+    # ArrayExpress dataset
+    dataset_name = "ArrayExpress"
+    type = "expression"
+    gene_file_name = "cell_line_expressions_array_express.csv"
+    drug_file_name = "drug_cell_line.csv"
+    data_directory = "data/"
+    
+    # GDSC2 dataset
+    dataset_name = "GDSC2"
+    type = "binary"
+    gene_file_name = "gene_expression.csv"
+    drug_file_name = "drug_cell_line.csv"
+    data_directory = "data/"
+    
+    dataset = Dataset(
+        dataset_name,
+        type,
+        gene_file_name,
+        drug_file_name,
+        data_directory)
+        
+    '''
 
 if __name__ == "__main__":
     main()
