@@ -10,7 +10,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
 from torch_geometric.data import DataLoader
 
-from gnn import GNNModel, create_graph_data
+from models.gnn import create_graph_data, GNNModel
 
 models_directory = "data/saved_models/"
 
@@ -146,7 +146,7 @@ def train_neural_network(drug_id, method, k, X_train, y_train, X_val, y_val, epo
     return model, history
 
 
-def train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val, hidden_dim=64, epochs=100):
+def train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val, hidden_dim=64, epochs=25):
     """
     Train or load a GNN model for a specific drug ID and return the trained model.
 
@@ -157,13 +157,13 @@ def train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val, hidden_d
         train_loader (DataLoader): DataLoader for training data.
         val_loader (DataLoader): DataLoader for validation data.
         input_dim (int): Number of input features for each node.
-        epochs (int, optional): Number of epochs to train the model. Defaults to 100.
+        epochs (int, optional): Number of epochs to train the model. Defaults to 25.
 
     Returns:
         model: Trained GNN model.
     """
-    train_data = create_graph_data(X_train.values, y_train.values)
-    val_data = create_graph_data(X_val.values, y_val.values)
+    train_data = create_graph_data(X_train, y_train.values)
+    val_data = create_graph_data(X_val, y_val.values)
 
     train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_data, batch_size=32, shuffle=False)
@@ -172,7 +172,7 @@ def train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val, hidden_d
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model = GNNModel(1, hidden_dim).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.MSELoss()
 
     # Check if the model already exists
@@ -192,9 +192,8 @@ def train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val, hidden_d
                 loss.backward()
                 optimizer.step()
                 train_loss += loss.item()
-            train_loss /= len(train_loader)
 
-            # Validation phase
+            # Validation phase, RN validation data is not used for anything
             model.eval()
             val_loss = 0
             with torch.no_grad():
@@ -203,7 +202,6 @@ def train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val, hidden_d
                     output = model(data).squeeze()
                     loss = criterion(output, data.y)
                     val_loss += loss.item()
-            val_loss /= len(val_loader)
 
             print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 

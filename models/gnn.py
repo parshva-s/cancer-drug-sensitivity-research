@@ -1,26 +1,47 @@
 import torch
 import torch.nn.functional as F
 from sklearn.metrics import mean_squared_error
-from torch_geometric.data import Data, DataLoader
-from torch_geometric.nn import GCNConv, global_mean_pool
+from torch_geometric.data import Data, DataLoader, Batch
+from torch_geometric.nn import GCNConv, global_mean_pool, Sequential
+import torch.nn as nn
 
 
 class GNNModel(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(GNNModel, self).__init__()
-        self.conv1 = GCNConv(input_dim, hidden_dim)
-        self.conv2 = GCNConv(hidden_dim, hidden_dim)
-        self.fc = torch.nn.Linear(hidden_dim, 1)
+        torch.manual_seed(42)
+        self.dropout_p = 0.1
+
+        seq_arch = [
+            (GCNConv(in_channels=1, out_channels=128), 'x, edge_index -> x1'),
+            nn.ReLU(inplace=True),
+            (global_mean_pool, 'x1, batch -> x2'),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+        ]
+        # Cell-line graph branch. Obtains node embeddings.
+        self.cell_emb = Sequential('x, edge_index, batch', seq_arch)
+
+        self.fcn = nn.Sequential(
+            nn.Linear(65, 32),
+            nn.ReLU(),
+            nn.Dropout(self.dropout_p),
+            nn.Linear(32, 1),
+        )
 
     def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-        x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = self.conv2(x, edge_index)
-        x = F.relu(x)
-        x = global_mean_pool(x, batch)  # Aggregate node features into graph representation
-        x = self.fc(x)
-        return x
+        X, edge_index, batch_num = data.x.float(), data.edge_index, data.batch
+        drug_data = data.y.view(-1, 1).float()
+        cell_emb = self.cell_emb(X, edge_index, batch_num)
+
+        assert cell_emb.size(0) == drug_data.size(0), "Mismatch in batch size between cell_emb and drug_emb"
+
+        # Concatenate along the feature dimension
+        concat = torch.cat([cell_emb, drug_data], dim=-1)
+
+        # Fully connected network
+        y = self.fcn(concat).reshape(-1)
+        return y
 
 
 def create_graph_data(X, y):
@@ -70,7 +91,7 @@ def evaluate_gnn_model(model, X_test, y_test, batch_size=32):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    test_data = create_graph_data(X_test.values, y_test.values)  # Assuming pandas DataFrame/Series
+    test_data = create_graph_data(X_test, y_test.values)  # Assuming pandas DataFrame/Series
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
     # Initialize predictions and ground truth lists
