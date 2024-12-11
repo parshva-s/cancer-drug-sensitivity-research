@@ -1,5 +1,6 @@
-numpy==2.1.2
-pandas==2.2.3
-scikit-learn==1.5.2
-matplotlib==3.9.2
-keras==2.15.0
+pandas
+scikit-learn
+matplotlib
+keras
+torch
+torch-geometric
