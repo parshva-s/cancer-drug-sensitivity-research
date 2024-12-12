@@ -48,6 +48,8 @@ class Dataset:
         """
         if self.dataset_name == "GDSC2":
             print("This is the GDSC2 dataset.")
+        elif self.dataset_name == "ArrayExpress":
+            print("This is the ArrayExpress dataset.")
         elif self.dataset_name == "CCLE":
             print("This is the CCLE dataset.")
         else:
@@ -107,6 +109,15 @@ class Dataset:
         
         # set gene expression data
         if self.type == "expression":
+            # check if column with cell line names exists
+            if self.dataset_name == "CCLE":
+                # rename the first column to "Cell_Line"
+                data.rename(columns={data.columns[0]: "Cell_Line"}, inplace=True)
+                # map cell line to id in first column to cell line name in cell_line_mapping.csv which contains the id and drug names
+                cell_line_mapping = pd.read_csv(data_directory + "cell_line_mapping_ccle.csv")
+                cell_line_mapping = dict(zip(cell_line_mapping["ModelID"], cell_line_mapping["CellLineName"]))
+                data["Cell_Line"] = data["Cell_Line"].map(cell_line_mapping)
+                
             self.gene_expression_data = data.set_index("Cell_Line")
 
         # Rename gene columns to generic format (e.g., "gene_1", "gene_2", ...)
@@ -296,7 +307,7 @@ def main():
     drug_id = 1003
     type = "expression"
     data_directory = "data/"
-    gene_file_name = "cell_line_expressions.csv"
+    gene_file_name = "cell_line_expressions_ccle.csv"
     drug_file_name = "drug_cell_line.csv"
 
     # create dataset to be used
@@ -307,10 +318,44 @@ def main():
         drug_file_name,
         data_directory)
     
-    print(dataset.create_data(drug_id))
+    # print(dataset.create_data(drug_id))
+    # dataset.create_data(drug_id)  # create dataset for drug id
     
     # create_csv(["final"], dataset, [f"final_drug_{drug_id}_dataset.csv"],
     #            data_directory)  # create csv for final dataset
+    
+    '''
+    Templates for using dataset object
+    
+    # CCLE dataset
+    dataset_name = "CCLE"
+    type = "expression"
+    gene_file_name = "cell_line_expressions_ccle.csv"
+    drug_file_name = "drug_cell_line.csv"
+    data_directory = "data/"
+    
+    # ArrayExpress dataset
+    dataset_name = "ArrayExpress"
+    type = "expression"
+    gene_file_name = "cell_line_expressions_array_express.csv"
+    drug_file_name = "drug_cell_line.csv"
+    data_directory = "data/"
+    
+    # GDSC2 dataset
+    dataset_name = "GDSC2"
+    type = "binary"
+    gene_file_name = "gene_expression.csv"
+    drug_file_name = "drug_cell_line.csv"
+    data_directory = "data/"
+    
+    dataset = Dataset(
+        dataset_name,
+        type,
+        gene_file_name,
+        drug_file_name,
+        data_directory)
+        
+    '''
 
 if __name__ == "__main__":
     main()
