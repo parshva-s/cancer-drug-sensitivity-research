@@ -1,12 +1,17 @@
 import time
-import pandas as pd
+
 import matplotlib.pyplot as plt
-from preprocessor.Dataset import Dataset
+import pandas as pd
+
 from feature_reduction.NMF_expression import apply_nmf
-from models.models import grid_search_random_forest, grid_search_svr, grid_search_elastic_net, train_neural_network, evaluate_model
-from utils.common import split_data
-from feature_reduction.feature_selection import perform_pearson_correlation
 from feature_reduction.PCA import perform_pca
+from feature_reduction.feature_selection import perform_pearson_correlation
+from models.gnn import evaluate_gnn_model
+from models.models import grid_search_random_forest, grid_search_svr, grid_search_elastic_net, train_neural_network, \
+    evaluate_model, train_gnn_model
+from preprocessor.Dataset import Dataset
+from utils.common import split_data
+
 
 def main():
     dataset_name = "CCLE"
@@ -110,6 +115,13 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     nn_mse, _ = evaluate_model(nn_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Neural Network', k, nn_mse, elapsed_time))
+
+    # Evaluate GNN
+    start_time = time.time()
+    gnn_model = train_gnn_model(drug_id, method, k, X_train, y_train, X_val, y_val)
+    gnn_mse = evaluate_gnn_model(gnn_model, X_test, y_test)
+    elapsed_time = time.time() - start_time
+    results.append((method, 'GNN', k, gnn_mse, elapsed_time))
 
 def plot_results(results):
     """
