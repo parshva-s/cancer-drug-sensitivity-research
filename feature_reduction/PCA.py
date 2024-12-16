@@ -27,11 +27,12 @@ def perform_pca(k, X_train, X_val, X_test):
     """
     pca = PCA(n_components=k)
     X_train = pca.fit_transform(X_train)
-    X_train = pd.DataFrame(X_train, columns=[f"PC{i+1}" for i in range(k)])
+    pca_columns = [f"PC{i+1}" for i in range(k)]
+    X_train = pd.DataFrame(X_train, columns=pca_columns)
     X_val = pca.transform(X_val)
-    X_val = pd.DataFrame(X_val, columns=[f"PC{i+1}" for i in range(k)])
+    X_val = pd.DataFrame(X_val, columns=pca_columns)
     X_test = pca.transform(X_test)
-    X_test = pd.DataFrame(X_test, columns=[f"PC{i+1}" for i in range(k)])
+    X_test = pd.DataFrame(X_test, columns=pca_columns)
     return X_train, X_val, X_test
 
 def number_of_components(df):
