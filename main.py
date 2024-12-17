@@ -1,28 +1,52 @@
 import time
-import pandas as pd
+
 import matplotlib.pyplot as plt
-from preprocessor.Dataset import Dataset
+import pandas as pd
+
 from feature_reduction.NMF_expression import apply_nmf
-from models.models import grid_search_random_forest, grid_search_svr, grid_search_elastic_net, train_neural_network, evaluate_model
-from utils.common import split_data
-from feature_reduction.feature_selection import perform_pearson_correlation
 from feature_reduction.PCA import perform_pca
+from feature_reduction.feature_selection import perform_pearson_correlation
+from models.gnn import evaluate_gnn_model
+from models.models import grid_search_random_forest, grid_search_svr, grid_search_elastic_net, train_neural_network, \
+    evaluate_model, train_gnn_model
+from preprocessor.Dataset import Dataset
+from utils.common import split_data
 import os
 
-dataset_name = "GDSC2"
+dataset_name = "CCLE"
 type = "expression"
 data_directory = "data/"
-results_directory = "data/results/"
-gene_file_name = "cell_line_expressions.csv"
+results_directory = f"data/results/{dataset_name}/"
+gene_file_name = "cell_lines_expressions_ccle.csv"
 drug_file_name = "drug_cell_line.csv"
 drop_columns = ['AUC', 'Z_SCORE', 'RMSE', 'CELL_LINE_NAME', 'DRUG_ID']
 target_variable = "LN_IC50"
-reduction_methods = ['pearson', 'pca']
+reduction_methods = ['pearson']
 # feature parameters
-k_values = [5, 10, 25, 50, 100, 200, 400, 600]
+k_values = [5, 10, 25, 50, 100, 200]
 n_components_list = [5, 10, 25, 50, 100]
 pca_components = [5, 10, 25, 50, 100]
 
+def initialize_dirs():
+    directories = [
+        os.path.join(data_directory, "data"),
+        os.path.join(data_directory, "plots"),
+        os.path.join(data_directory, "results"),
+        os.path.join(data_directory, "results", "ArrayExpress"),
+        os.path.join(data_directory, "results", "CCLE"),
+        os.path.join(data_directory, "results", "GDSC2"),
+        os.path.join(data_directory, "saved_models"),
+        os.path.join(data_directory, "saved_models", dataset_name),
+        os.path.join(data_directory, "saved_models", "ArrayExpress"),
+        os.path.join(data_directory, "results", "GDSC2"),
+        os.path.join(data_directory, "saved_models", "CCLE"),
+    ]
+
+    # Create directories if they don't exist
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+        
+    print("Directory structure created.")
 
 def main():
     # initialize dataset
@@ -44,19 +68,19 @@ def main():
     for drug_id in drug_ids:
         df = dataset.create_data(drug_id)
         df.drop(columns=drop_columns, inplace=True)
-        if df.shape[0] <= 600:
-            continue
-
+        # if df.shape[0] <= 600:
+        #     continue
         # Test different feature selection and dimensionality reduction techniques
         for method in reduction_methods:
             if method == 'pearson':
                 for k in k_values:
-                    rf_results_path = f'data/results/{drug_id}_{method}_{k}_rf.csv'
-                    svr_results_path = f'data/results/{drug_id}_{method}_{k}_svr.csv'
-                    en_results_path = f'data/results/{drug_id}_{method}_{k}_en.csv'
-                    nn_results_path = f'data/results/{drug_id}_{method}_{k}_nn.csv'
-                    if os.path.exists(rf_results_path) and os.path.exists(svr_results_path) and os.path.exists(en_results_path) and os.path.exists(nn_results_path):
-                        print(f"Result '{drug_id}_{method}_{k}' found. Loading the result...")
+                    rf_results_path = f'{results_directory}{drug_id}_{method}_{k}_rf.csv'
+                    svr_results_path = f'{results_directory}{drug_id}_{method}_{k}_svr.csv'
+                    en_results_path = f'{results_directory}{drug_id}_{method}_{k}_en.csv'
+                    nn_results_path = f'{results_directory}{drug_id}_{method}_{k}_nn.csv'
+                    gnn_results_path = f'{results_directory}{drug_id}_{method}_{k}_gnn.csv'
+                    if os.path.exists(rf_results_path) and os.path.exists(svr_results_path) and os.path.exists(en_results_path) and os.path.exists(nn_results_path) and os.path.exists(gnn_results_path):
+                        print(f"Result '{dataset_name}_{drug_id}_{method}_{k}' found. Loading the result...")
                         rf_result = pd.read_csv(rf_results_path)
                         results.append(tuple(rf_result.iloc[0]))
                         svr_result = pd.read_csv(svr_results_path)
@@ -65,6 +89,8 @@ def main():
                         results.append(tuple(en_result.iloc[0]))
                         nn_result = pd.read_csv(nn_results_path)
                         results.append(tuple(nn_result.iloc[0]))
+                        gnn_result = pd.read_csv(gnn_results_path)
+                        results.append(tuple(gnn_result.iloc[0]))
                     else:
                         top_K_pearson_df = perform_pearson_correlation(df, target_variable, k)
                         top_features = top_K_pearson_df['Gene'].values
@@ -76,12 +102,13 @@ def main():
                 X = df.drop(columns=[target_variable])
                 y = df[target_variable]
                 for n_components in n_components_list:
-                    rf_results_path = f'data/results/{drug_id}_{method}_{k}_rf.csv'
-                    svr_results_path = f'data/results/{drug_id}_{method}_{k}_svr.csv'
-                    en_results_path = f'data/results/{drug_id}_{method}_{k}_en.csv'
-                    nn_results_path = f'data/results/{drug_id}_{method}_{k}_nn.csv'
-                    if os.path.exists(rf_results_path) and os.path.exists(svr_results_path) and os.path.exists(en_results_path) and os.path.exists(en_results_path):
-                        print(f"Result '{drug_id}_{method}_{k}' found. Loading the result...")
+                    rf_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_rf.csv'
+                    svr_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_svr.csv'
+                    en_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_en.csv'
+                    nn_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_nn.csv'
+                    gnn_results_path = f'{results_directory}{drug_id}_{method}_{k}_gnn.csv'
+                    if os.path.exists(rf_results_path) and os.path.exists(svr_results_path) and os.path.exists(en_results_path) and os.path.exists(nn_results_path) and os.path.exists(gnn_results_path):
+                        print(f"Result '{dataset_name}_{drug_id}_{method}_{k}' found. Loading the result...")
                         rf_result = pd.read_csv(rf_results_path)
                         results.append(tuple(rf_result.iloc[0]))
                         svr_result = pd.read_csv(svr_results_path)
@@ -90,6 +117,8 @@ def main():
                         results.append(tuple(en_result.iloc[0]))
                         nn_result = pd.read_csv(nn_results_path)
                         results.append(tuple(nn_result.iloc[0]))
+                        gnn_result = pd.read_csv(gnn_results_path)
+                        results.append(tuple(gnn_result.iloc[0]))
                     else:
                         W, _, _ = apply_nmf(X, n_components)
                         X_train, X_val, X_test, y_train, y_val, y_test = split_data(
@@ -100,12 +129,13 @@ def main():
                 X = df.drop(columns=[target_variable])
                 y = df[target_variable]
                 for n_components in pca_components:
-                    rf_results_path = f'data/results/{drug_id}_{method}_{k}_rf.csv'
-                    svr_results_path = f'data/results/{drug_id}_{method}_{k}_svr.csv'
-                    en_results_path = f'data/results/{drug_id}_{method}_{k}_en.csv'
-                    nn_results_path = f'data/results/{drug_id}_{method}_{k}_nn.csv'
-                    if os.path.exists(rf_results_path) and os.path.exists(svr_results_path) and os.path.exists(en_results_path) and os.path.exists(en_results_path):
-                        print(f"Result '{drug_id}_{method}_{k}' found. Loading the result...")
+                    rf_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_rf.csv'
+                    svr_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_svr.csv'
+                    en_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_en.csv'
+                    nn_results_path = f'{results_directory}{drug_id}_{method}_{n_components}_nn.csv'
+                    gnn_results_path = f'{results_directory}{drug_id}_{method}_{k}_gnn.csv'
+                    if os.path.exists(rf_results_path) and os.path.exists(svr_results_path) and os.path.exists(en_results_path) and os.path.exists(nn_results_path) and os.path.exists(gnn_results_path):
+                        print(f"Result '{dataset_name}_{drug_id}_{method}_{k}' found. Loading the result...")
                         rf_result = pd.read_csv(rf_results_path)
                         results.append(tuple(rf_result.iloc[0]))
                         svr_result = pd.read_csv(svr_results_path)
@@ -114,6 +144,8 @@ def main():
                         results.append(tuple(en_result.iloc[0]))
                         nn_result = pd.read_csv(nn_results_path)
                         results.append(tuple(nn_result.iloc[0]))
+                        gnn_result = pd.read_csv(gnn_results_path)
+                        results.append(tuple(gnn_result.iloc[0]))
                     else:
                         X_train, X_val, X_test, y_train, y_val, y_test = split_data(X = X, y = y)
                         X_train, X_val, X_test = perform_pca(n_components, X_train, X_val, X_test)
@@ -139,9 +171,9 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
         drug_id (int): drug id data used to evaluate model
     """
     # evaluate Random Forest
-    rf_results_path = f'data/results/{drug_id}_{method}_{k}_rf.csv'
+    rf_results_path = f'{results_directory}{drug_id}_{method}_{k}_rf.csv'
     start_time = time.time()
-    rf_model = grid_search_random_forest(drug_id, method, k, X_train, y_train)
+    rf_model = grid_search_random_forest(dataset_name, drug_id, method, k, X_train, y_train)
     rf_mse, _ = evaluate_model(rf_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Random Forest', k, rf_mse, elapsed_time, drug_id))
@@ -153,9 +185,9 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     df_results.to_csv(rf_results_path, index=False)
 
     # evaluate SVR
-    svr_results_path = f'data/results/{drug_id}_{method}_{k}_svr.csv'
+    svr_results_path = f'{results_directory}{drug_id}_{method}_{k}_svr.csv'
     start_time = time.time()
-    svr_model = grid_search_svr(drug_id, method, k, X_train, y_train)
+    svr_model = grid_search_svr(dataset_name, drug_id, method, k, X_train, y_train)
     svr_mse, _ = evaluate_model(svr_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'SVR', k, svr_mse, elapsed_time, drug_id))
@@ -167,9 +199,9 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     df_results.to_csv(svr_results_path, index=False)
         
     # evaluate Elastic Net
-    en_results_path = f'data/results/{drug_id}_{method}_{k}_en.csv'
+    en_results_path = f'{results_directory}{drug_id}_{method}_{k}_en.csv'
     start_time = time.time()
-    en_model = grid_search_elastic_net(drug_id, method, k, X_train, y_train)
+    en_model = grid_search_elastic_net(dataset_name, drug_id, method, k, X_train, y_train)
     en_mse, _ = evaluate_model(en_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Elastic Net', k, en_mse, elapsed_time, drug_id))
@@ -181,9 +213,9 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     df_results.to_csv(en_results_path, index=False)
 
     # evaluate Neural Network
-    nn_results_path = f'data/results/{drug_id}_{method}_{k}_nn.csv'
+    nn_results_path = f'{results_directory}{drug_id}_{method}_{k}_nn.csv'
     start_time = time.time()
-    nn_model, _ = train_neural_network(drug_id, method, k, X_train, y_train, X_val, y_val)
+    nn_model, _ = train_neural_network(dataset_name, drug_id, method, k, X_train, y_train, X_val, y_val)
     nn_mse, _ = evaluate_model(nn_model, X_test, y_test)
     elapsed_time = time.time() - start_time
     results.append((method, 'Neural Network', k, nn_mse, elapsed_time, drug_id))
@@ -193,6 +225,20 @@ def evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, k, method, r
     )
     print(f"Saved result to {nn_results_path}")
     df_results.to_csv(nn_results_path, index=False)
+
+    # Evaluate GNN
+    gnn_results_path = f'{results_directory}{drug_id}_{method}_{k}_gnn.csv'
+    start_time = time.time()
+    gnn_model = train_gnn_model(dataset_name, drug_id, method, k, X_train, y_train, X_val, y_val)
+    gnn_mse = evaluate_gnn_model(gnn_model, X_test, y_test)
+    elapsed_time = time.time() - start_time
+    results.append((method, 'GNN', k, gnn_mse, elapsed_time))
+    df_results = pd.DataFrame(
+        [[method, 'GNN', k, gnn_mse, elapsed_time, drug_id]],
+        columns=['Method', 'Model', 'K/Components', 'MSE', 'Time', 'Drug ID']
+    )
+    print(f"Saved result to {gnn_results_path}")
+    df_results.to_csv(gnn_results_path, index=False)
 
 def plot_results(results):
     """
@@ -226,7 +272,7 @@ def plot_results(results):
         plt.title(f'Average Model Performance for {method.upper()} Reduction Technique')
         plt.legend()
         plt.grid(True)
-        plt.savefig(f'./data/plots/avg_mse_{method}.png')
+        plt.savefig(f'./data/plots/avg_mse_{dataset_name}_{method}.png')
         plt.close()
 
     print("Graphs saved to './data/plots/' folder.")
@@ -367,5 +413,6 @@ def evaluate_best_rm():
     plot_results_models(results)
 
 if __name__ == "__main__":
+    initialize_dirs()
     main()
     # evaluate_best_rm() # run only to find the best feature reduction technique
