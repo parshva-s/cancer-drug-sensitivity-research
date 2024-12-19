@@ -103,8 +103,16 @@ def evaluate_gnn_model(model, X_test, y_test, batch_size=32):
         for data in test_loader:
             data = data.to(device)
             output = model(data).squeeze()  # Predictions
-            predictions.extend(output.cpu().numpy())
-            ground_truth.extend(data.y.cpu().numpy())
+
+            if isinstance(output, torch.Tensor):
+                output_list = output.tolist()
+                if not isinstance(output_list, list):  # Handle scalar case
+                    output_list = [output_list]
+            else:
+                output_list = [output]
+
+            predictions.extend(output_list)
+            ground_truth.extend(data.y.tolist())
 
     # Calculate Mean Squared Error
     mse = mean_squared_error(ground_truth, predictions)
