@@ -192,6 +192,7 @@ def train_gnn_model(dataset_name, drug_id, method, k, X_train, y_train, X_val, y
                 loss.backward()
                 optimizer.step()
                 train_loss += loss.item()
+            train_loss /= len(train_loader)
 
             # Validation phase, RN validation data is not used for anything
             model.eval()
@@ -202,6 +203,7 @@ def train_gnn_model(dataset_name, drug_id, method, k, X_train, y_train, X_val, y
                     output = model(data).squeeze()
                     loss = criterion(output, data.y)
                     val_loss += loss.item()
+            val_loss /= len(val_loader)
 
             print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 

@@ -10,37 +10,35 @@ class GNNModel(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(GNNModel, self).__init__()
         torch.manual_seed(42)
-        self.dropout_p = 0.1
 
         seq_arch = [
-            (GCNConv(in_channels=1, out_channels=128), 'x, edge_index -> x1'),
+            (GCNConv(in_channels=1, out_channels=256), 'x, edge_index -> x1'),
             nn.ReLU(inplace=True),
-            (global_mean_pool, 'x1, batch -> x2'),
-            nn.Linear(128, 64),
+            (GCNConv(in_channels=256, out_channels=256), 'x1, edge_index -> x2'),
+            nn.ReLU(inplace=True),
+            (global_mean_pool, 'x2, batch -> x3'),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
             nn.ReLU(),
         ]
         # Cell-line graph branch. Obtains node embeddings.
         self.cell_emb = Sequential('x, edge_index, batch', seq_arch)
 
         self.fcn = nn.Sequential(
-            nn.Linear(65, 32),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Dropout(self.dropout_p),
+            nn.Linear(64, 32),
+            nn.ReLU(),
             nn.Linear(32, 1),
         )
 
     def forward(self, data):
         X, edge_index, batch_num = data.x.float(), data.edge_index, data.batch
-        drug_data = data.y.view(-1, 1).float()
         cell_emb = self.cell_emb(X, edge_index, batch_num)
 
-        assert cell_emb.size(0) == drug_data.size(0), "Mismatch in batch size between cell_emb and drug_emb"
-
-        # Concatenate along the feature dimension
-        concat = torch.cat([cell_emb, drug_data], dim=-1)
-
         # Fully connected network
-        y = self.fcn(concat).reshape(-1)
+        y = self.fcn(cell_emb).reshape(-1)
         return y
 
 
