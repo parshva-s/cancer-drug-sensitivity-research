@@ -55,11 +55,11 @@ data
 Figure 2: Average MSE of the Three Reduction Techniques
 using the Random Forest Model
 
-![CCLE](results\avg_mse_CCLE_pearson.png)
+![CCLE](results/avg_mse_CCLE_pearson.png)
 Figure 3: Average MSE Across Five Different Models using
 PCC and CCLE dataset
 
-![MTAB](results\avg_mse_MTAB_pearson.png)
+![MTAB](results/avg_mse_MTAB_pearson.png)
 Figure 4: Average MSE across Five Different Models using
 PCC and E-MTAB-3610 dataset
 
